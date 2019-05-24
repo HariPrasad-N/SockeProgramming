@@ -17,7 +17,10 @@ def cancel():
                 send="Show1 t_id == '"+trip+"'"
                 tcpClientA.send(send)
                 data = tcpClientA.recv(BUFFER_SIZE)
-                df=pd.read_json(data,orient='split',dtype=str)
+                try:
+                        df=pd.read_json(data,orient='split',dtype=str,lines=True)
+                except:
+                       df=pd.read_json(data,orient='split',dtype=str) 
                 if df.shape[0]==0:
                         print("No results found try again")
                 else:
@@ -48,8 +51,14 @@ def add():
                 tcpClientA.send("trip ")
                 city=tcpClientA.recv(BUFFER_SIZE)
                 train=tcpClientA.recv(BUFFER_SIZE)
-                train=pd.read_json(train,orient='split',convert_dates=False)
-                city=pd.read_json(city,orient='split',convert_dates=False)
+                try:
+                        train=pd.read_json(train,orient='split',convert_dates=False,lines=True)
+                except:
+                        train=pd.read_json(train,orient='split',convert_dates=False)
+                try:
+                        city=pd.read_json(city,orient='split',convert_dates=False,lines=True)
+                except:
+                        city=pd.read_json(city,orient='split',convert_dates=False)
                 print(train)
                 print(city)
                 t = raw_input ("Enter train name source id destionation id arrival time departure time and date: ")
@@ -66,7 +75,10 @@ def book():
                         send="Show t_id == '"+trip+"'"
                         tcpClientA.send(send)
                         data = tcpClientA.recv(BUFFER_SIZE)
-                        df=pd.read_json(data,orient='split',convert_dates=False,dtype=str)
+                        try:
+                                df=pd.read_json(data,orient='split',convert_dates=False,dtype=str)
+                        except:
+                                df=pd.read_json(data,orient='split',convert_dates=False,dtype=str,lines=True)
                         if df.shape[0]==0:
                                 print("No results found try again")
                         else:
@@ -143,8 +155,11 @@ tcpClientA = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 tcpClientA.connect((host,port))
 
 data = tcpClientA.recv(BUFFER_SIZE)
-
-print(pd.read_json(data,orient='split',convert_dates=False))
+try:
+        print(pd.read_json(data,orient='split',convert_dates=False))
+except:
+        print(pd.read_json(data,orient='split',convert_dates=False,lines=True))
+        
 
 MESSAGE = query()
 
@@ -156,7 +171,10 @@ while MESSAGE != 'exit':
                 if(data=='exit'):
                         break
                 if is_json(data):
-                        df=pd.read_json(data,orient='split',convert_dates=False)
+                        try:
+                                df=pd.read_json(data,orient='split',convert_dates=False,lines=True)
+                        except:
+                                df=pd.read_json(data,orient='split',convert_dates=False)
                         if df.shape[0]==0:
                                 df="No results"
                 else:

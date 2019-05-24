@@ -5,8 +5,9 @@ from SocketServer import ThreadingMixIn
 import pandas as pd
 import time
 import numpy as np
+from threading import Lock
 
-lock=1
+lock=Lock()
 #import pandas as pd
 
 def sendtrip():
@@ -31,37 +32,33 @@ def getlast(df,i):
 
 def book(query):
         global lock
-        while lock!=1:
-                time.sleep(5)
-        lock=0
-        query=query.split(" ")
-        trips=query[0]
-        reqs=" ".join(query[1: ])
-        reqs=json.loads(reqs)
-        temp=seat.query("t_id == '"+trips+"'")
-        seats=[]
-        ids=[]
-        for i in range(0,len(reqs),2):
-                seats.append(reqs[i])
-        if set(seats) <= set(temp['sno']):
+        with lock:
+                query=query.split(" ")
+                trips=query[0]
+                reqs=" ".join(query[1: ])
+                reqs=json.loads(reqs)
+                temp=seat.query("t_id == '"+trips+"'")
+                seats=[]
+                ids=[]
                 for i in range(0,len(reqs),2):
-                        no=reqs[i]
-                        id=getlast(passenger,'id')
-                        ids.append(id)
-                        reqs[i+1].insert(0,id)
-                        insert(passenger,reqs[i+1])
-                        temp=seat.query("t_id == '"+trips+"' & sno == '"+no+"'")
-                        seat.loc[temp.index.tolist()[0]].pid=id
-                lock=1
-                detail=""
-                for i in range(0,len(seats)):
-                        detail=detail+" Seat "+str(seats[i])+" pid "+str(ids[i])+"\n"
-                print detail
-                return "Seats successfully booked \n"+detail
-        else:
-                lock=1
-                return "Seats already booked"
-        
+                        seats.append(reqs[i])
+                if set(seats) <= set(temp['sno']):
+                        for i in range(0,len(reqs),2):
+                                no=reqs[i]
+                                id=getlast(passenger,'id')
+                                ids.append(id)
+                                reqs[i+1].insert(0,id)
+                                insert(passenger,reqs[i+1])
+                                temp=seat.query("t_id == '"+trips+"' & sno == '"+no+"'")
+                                seat.loc[temp.index.tolist()[0]].pid=id
+                        detail=""
+                        for i in range(0,len(seats)):
+                                detail=detail+" Seat "+str(seats[i])+" pid "+str(ids[i])+"\n"
+                        print detail
+                        return "Seats successfully booked \n"+detail
+                else:
+                        return "Seats already booked"
+
         
 def cancel(query):
         query=query.split(" ")
